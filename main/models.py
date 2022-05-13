@@ -36,6 +36,7 @@ class Passport(models.Model):
     passport_organ = models.CharField(max_length = 255)
     issue_date = models.DateField()
     subdivision_code = models.CharField(max_length = 10)
+    birth_date = models.DateField(blank=True, null=True)
     
     
 class Chat(models.Model):

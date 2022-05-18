@@ -1,0 +1,87 @@
+-- Лабораторная работа №3
+
+create table new_table(
+    id_column integer not null auto_increment, 
+    column_text varchar(255),
+    column_date date,
+    column_date_time datetime,
+    column_float float,
+    column_boolean boolean,
+    primary key (id_column)
+);
+
+-- Восстановление столбцов в таблицах, удаленных на лабораторной работе
+
+alter table users
+add patronymic varchar(255);
+
+alter table user_data
+add subdivision_code varchar(7) NULL, issue_date date NULL;
+
+alter table user_activities
+drop column activity_date;
+
+-- Переименовывание таблиц
+alter table store rename products;
+
+rename table users to user;
+
+alter table new_table
+rename column column_text to column_1;
+
+rename table new_table to smth_name_to_table
+
+-- Удаление таблицы
+drop table smth_name_to_table;
+
+-- Заполнение таблиц
+
+insert into users (name, surname, patronymic, email, password, user_address)
+values  ('Vladimir', 'Sitchikhin', 'Eugenievich', 'vladimir@ex.com', '123qwe', NULL), 
+        ('Yuri', 'Antonov', 'Petrovich', 'yuri@ex.com', '123qwe', NULL),
+        ('Andrei', 'Inguschetov', NULL, 'anding@example.com', 'anding25', NULL),
+        ('Maria', 'Chergova', 'Stasovna', 'maria@ex.ru', NULL),
+        ('Viktoria', 'Perceva', 'Grigorievna', 'victory@ex.com', NULL),
+        ('Ioan', 'Chardonsky', 'Nikolaevich', 'ioan@ex.ru', 'ioan123', NULL);
+
+insert into user_data (user_id, passport_numbers, passport_organ, subdivision_code, issue_date)
+values  (1, 1857121198, 'GU MVD of Russia', '325-150', 2005-03-12),
+        (2, 1942646930, 'GU MVD of Russia', '145-123', 2018-12-10),
+        (3, 1245165263, 'GU MVD of Russia', '632-764', 1995-02-27),
+        (4, 6234521342, 'GU MVD of Russia', '733-124', 1979-06-16),
+        (5, 2345123453, 'GU MVD of Russia', '235-513', 2001-12-19),
+        (6, 1351623456, 'GU MVD of Russia', '124-062', 2020-08-26);
+
+insert into store (product_name, product_type, image_url, description)
+values  ('Year subscribe', 'subscribe', NULL, 'Subscribe for user on the year to our service'),
+        ('Month subscribe', 'subscribe', NULL, 'Subscribe for user on the MONTH to our service'),
+        ('Player skin', 'purchase', 'https://smth/img/url', 'Skin for user account or user agent');
+
+insert into purchases (user_id, product_id, action_start, action_end)
+values  (1, 2, 2022-03-15 21:04:30, 2022-04-15 21:04:30),
+        (2, 3, 2022-05-19 21:04:30, NULL),
+        (3, 1, 2022-07-27 21:04:30, 2023-07-27 21:04:30),
+        (4, 3, 2020-09-03 21:04:30, NULL),
+        (5, 1, 2021-09-03 21:04:30, 2022-09-03 21:04:30),
+        (6, 2, 2015-04-07 21:04:30, 2015-05-07 21:04:30);
+
+insert into user_activities (activity_name, page_url, activity_type)
+values  ('Log in', '/auth/login', 'authorisation user in system'),
+        ('Sign up', '/auth/signup', 'signing up user in system'),
+        ('Buy subscription', '/store/subscribe/{subscribe-id}', 'buying subscription on system'),
+        ('Buy skin', 'store/skins/{skin-id}', 'buying skin for user');
+
+insert into history (user_id, activity_id)
+values  (1, 1),
+        (2, 1),
+        (3, 4),
+        (5, 2),
+        (6, 3),
+        (4, 4),
+        (3, 2),
+
+-- Следующая команда была выполнена отдельно от остальных
+drop database my_database;
+
+
+-- Лабораторная работа №4

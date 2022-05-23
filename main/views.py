@@ -10,19 +10,17 @@ def index(request):
 
 
 @csrf_exempt
-def lessons(request, lessonid):
-    # if request.POST:
-    #     print(request.POST)
-    return HttpResponse(f'<h1>Страница уроков №{lessonid}</h1>')
-
-
-@csrf_exempt
-def singup(request):
+def signup(request):
+    # TODO получить данные и раскидать полученные данные по таблицам
     if request.POST:
         return HttpResponse('<h1>Страница регистрации POST</h1>')
     else:
         return HttpResponse('<h1>Страница регистрации</h1>')
 
+
+@csrf_exempt
+def login(request):
+    return HttpResponse('<h1>Страница входа</h1>')
 
 def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')

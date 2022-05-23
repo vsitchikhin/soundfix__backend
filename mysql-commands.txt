@@ -122,7 +122,195 @@ delete from logoped_created_lessons where difficult>8;
 
 delete from enrollment_in_group where enter_date='2022-05-26 22:05:30';
 
+-- SELECT, DISTINCT, WHERE, AND/OR/NOT, IN, BETWEEN, IS NULL, AS
+
+
+-- SELECT INTO / INSERT SELECT
+-- Создание таблиц для копирования в неё данных
+create table for_select_into_pasport(
+    id_column integer not null auto_increment, 
+    column_organ varchar(255),
+    column_numbers integer,
+    column_issue_date date,
+    column_code varchar (10),
+    primary key (id_column)
+);
+
+create table for_select_into_users(
+    id_column integer not null auto_increment,
+    column_name varchar(255) not null,
+    column_surname varchar(255) not null,
+    column_patronymic varchar(255),
+    column_birth_date date,
+    primary key (id_column)
+);
+
+create table for_select_into_store(
+    product_id_column integer not null auto_increment,
+    column_price integer,
+    column_type varchar(255),
+    column_privileges json,
+    primary key (product_id_column)
+);
+
+-- Сами запросы
+insert into for_select_into_users
+select * from users;
+
+insert into for_select_into_pasport
+select user_id, passport_organ, passport_numbers, issue_date, subdivision_code 
+from passport;
+
+insert into for_select_into_store
+select * from store;
+
+-- LIKE
+select user_id, name
+from users
+where surname like '%ва%';
+
+select email, account_type
+from user_data
+where password like '_i%a%';
+
+select user_id, passport_organ, passport_numbers
+from passport
+where passport_organ like '_У%';
+
+select lesson_theme, group_id, logoped_id
+from group_remote_lessons
+where lesson_theme like '%ш%';
+
+select logoped_id, institution
+from logoped_users
+where institution like '_____';
+
+-- JOIN
+select * from users
+join user_data on user_data.user_id=users.user_id
+
+-- TODO: На подобие такой хуйни понаделать еще 14 штук join'ов
+
+-- GROUP BY
+select name, count(name) from users
+group by name
+order by count(name) asc;
+
+select price from store
+group by price
+order by price desc;
+
+select rating, count(rating) from child_users
+group by rating
+having count(rating)>1;
+
+select price, max(price) from store
+group by price;
+
+select product_id, sum(price) from store
+group by product_id
+order by sum(price) asc;
+
+select child_id, sum(rating), count(rating) from child_users
+group by child_id
+having sum(rating)>10
+order by sum(rating) desc;
+
+select activity_id, sum(activity_id), 
+min(user_id), avg(activity_id) from history
+group by count(activity_id)
+order by count(activity_id) desc;
+
+select product_id, count(product_id) from purchases
+group by count(product_id)
+order by count(product_id) desc;
+
+select action_end, min(action_end) from purchases
+group by action_end;
+
+select institution, count(institution), sum(institution) from logoped_users
+group by sum(institution)
+order by count(institution) desc;
+
+select account_type, sum(account_type), count(account_type) from user_data
+group by count(account_type)
+order by count(account_type) asc;
+
+select type, count(type), sum(type), avg(type) from logoped_created_lessons
+group by count(type)
+order by count(type) desc;
+
+
+
+-- UNION, EXCEPT, INTERSECT
+select user_id, email from user_data
+where account_type=1
+union
+select logoped_id, institution from logoped_users;
+
+select product_id, type from store
+union
+select user_id, action_start from purchases;
+
+select group_id, logoped_id from children_groups
+where group_rating>0
+union 
+select child_id, rating from child_users
+where rating>20;
+
+-- GROUP_CONCAT
+select group_concat(name) as user_name from users;
+
+select group_concat(type) as product_data from store;
+
+select group_concat(institution) as VUZ from logoped_users;
+
+
+-- Запросы с WITH
+
+
+-- Вложенные SELECT
+select user_id, name, surname from users
+where user_id>all(
+    select logoped_id from logoped_users
+    where logoped_id=user_id
+);
+
+select logoped_id, institution from logoped_users
+where logoped_id=any(
+    select user_id from users
+    where user_id=logoped_id
+);
+
+select * from purchases
+where exists(
+    select product_id from store
+    where user_id=6
+);
+
+-- Разные функции СУБД
+select concat('Иван', ' ', 'Анатольев');
+
+select ltrim('        VSTU');
+
+select locate('m', 'Tom Mentoth');
+
+select now();
+
+select sysdate();
+
+select current_time();
+
+select dayofyear('2022-05-23');
+
+select 1 + 2;
+
+select 120 * 234;
+
+select 123 % 14;
+
 -- Сложные запросы
 
 
--- LIKE и другие команды работы со строками
+-- Функциональные требования:
+

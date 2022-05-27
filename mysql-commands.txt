@@ -123,7 +123,45 @@ delete from logoped_created_lessons where difficult>8;
 delete from enrollment_in_group where enter_date='2022-05-26 22:05:30';
 
 -- SELECT, DISTINCT, WHERE, AND/OR/NOT, IN, BETWEEN, IS NULL, AS
+select distinct user_id, name, surname from users;
 
+select * from passport
+where passport_organ like 'ГУ%';
+
+select * from passport
+where passport_organ not like 'ГУ%';
+
+select * from users
+where name like '%ва%' and surname like '%ов%';
+
+select * from store
+where price>1000 or price<500;
+
+select * from logoped_users
+where institution in('ВолгГМУ');
+
+select * from store
+where price between 500 and 1000;
+
+select * from passport
+where date(issue_date)>'2022-05-05';
+
+select * from passport
+where passport_numbers>1816140000;
+
+select * from purchases
+where action_end is null;
+
+select * from users
+where user_id as logoped_users.logoped_id;
+
+select 1+'1';
+
+select * from users
+where patronymic is null;
+
+select * from logoped_created_lessons
+where type like 'Урок' and (difficult>6 or difficult<3);
 
 -- SELECT INTO / INSERT SELECT
 -- Создание таблиц для копирования в неё данных
@@ -187,9 +225,46 @@ where institution like '_____';
 
 -- JOIN
 select * from users
-join user_data on user_data.user_id=users.user_id
+join user_data on user_data.user_id=users.user_id;
 
--- TODO: На подобие такой хуйни понаделать еще 14 штук join'ов
+select * from passport
+inner join user_data using(user_id);
+
+select * from child_users
+cross join enrollment_in_group using(child_id);
+
+select * from store
+left join purchases using(product_id);
+
+select * from purchases
+right join users using(user_id);
+
+select * from logoped_created_lessons
+cross join logoped_users using(logoped_id);
+
+select * from group_remote_lessons
+join children_groups on children_groups.group_id=group_remote_lessons.group_id;
+
+select * from children_groups
+join logoped_users on logoped_users.logoped_id=children_groups.logoped_id;
+
+select * from parent_users
+inner join applications using(parent_id);
+
+select * from logoped_users
+cross join applications using(logoped_id);
+
+select * from completed_lessons
+left join logoped_created_lessons using(lesson_id);
+
+select * from completed_lessons
+right join child_users using(child_id);
+
+select * from purchases
+cross join users using(user_id);
+
+select * from user_activities
+join history on history.activity_id=user_activities.activity_id;
 
 -- GROUP BY
 select name, count(name) from users
@@ -240,8 +315,6 @@ select type, count(type), sum(type), avg(type) from logoped_created_lessons
 group by count(type)
 order by count(type) desc;
 
-
-
 -- UNION, EXCEPT, INTERSECT
 select user_id, email from user_data
 where account_type=1
@@ -267,7 +340,16 @@ select group_concat(institution) as VUZ from logoped_users;
 
 
 -- Запросы с WITH
+with cte_users as (
+    select * from users
+)
+select * from cte_users;
 
+with cte_passport as (
+    select * from passport
+)
+select passport_numbers, passport_organ, user_id
+from cte_passport;
 
 -- Вложенные SELECT
 select user_id, name, surname from users
@@ -309,8 +391,54 @@ select 120 * 234;
 
 select 123 % 14;
 
--- Сложные запросы
-
-
 -- Функциональные требования:
+-- 1. Подсчет количества пользователей определенного типа
+select account_type, count(account_type) from user_data
+group by account_type;
 
+-- 2. Рассчет возраста пользователя
+select name, birth_date, 
+(year(current_date) - year(birth_date)) as 'age'
+from users
+order by name;
+
+-- 3. Расчет оставшегося времени доступа к определенному ресурсу
+select user_id, product_id, action_end,
+(year(action_end) - year(current_date)) * 12 + (month(action_end) - month(current_date)) + (day(action_end) - day(current_date)) / 12
+as 'access_time_left'
+from purchases
+where action_end>current_date or action_end=current_date
+order by access_time_left desc;
+
+-- 4. Расчет тройки лучших учеников
+select child_id, max(rating) as 'rating'
+from child_users
+inner join users on users.user_id=child_users.child_id
+group by child_id
+order by max(rating) desc
+limit 3;
+
+-- 5. Количество заявок у определенного преподавателя
+select logoped_id, count(logoped_id) from applications
+group by logoped_id
+order by count(logoped_id) asc;
+
+-- 6. Паспортные данные определенного пользователя
+select * from users
+left join passport using(user_id)
+where user_id=10;
+
+-- 7. Уроки созданные определенным преподавателем
+select * from logoped_created_lessons
+where logoped_id=10;
+
+-- 8. Типы и сложность уроков
+select type, difficult from logoped_created_lessons;
+
+-- 9. Тип пользователя
+select account_type from user_data
+where user_id=7;
+
+-- 10. История определенного пользователя
+select * from history
+where user_id=1;

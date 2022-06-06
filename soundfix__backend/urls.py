@@ -16,19 +16,10 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-# from django.views.generic import TemplateView
-from main.views import *
-
-# from soundfix__backend.main.views import pageNotFound
 from django.conf import settings
+from users.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('main.urls')),
-    # path('', TemplateView.as_view(template_name='index.html'), name='index')
+    path('api/v1/user', UserAPIView.as_view())
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-handler404 = pageNotFound

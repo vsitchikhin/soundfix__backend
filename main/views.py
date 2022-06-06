@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound  # , Http404
 from django.views.decorators.csrf import csrf_exempt
+from main.models import Users, User_Data, Teacher_Users
+import json
+
 
 
 def index(request):
@@ -11,11 +14,7 @@ def index(request):
 
 @csrf_exempt
 def signup(request):
-    # TODO получить данные и раскидать полученные данные по таблицам
-    if request.POST:
-        return HttpResponse('<h1>Страница регистрации POST</h1>')
-    else:
-        return HttpResponse('<h1>Страница регистрации</h1>')
+    return HttpResponse('Hello')
 
 
 @csrf_exempt

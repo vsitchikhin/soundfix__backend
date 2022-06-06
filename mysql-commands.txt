@@ -84,6 +84,13 @@ values  (1, 1),
 drop database my_database;
 
 
+-- мода
+-- в покупку может входить множество продуктов
+-- дефолтное значение на старт действия покупки - current_date
+-- дата конца подписки всегда больше даты начала
+-- user_activity к пользователю не многие ко многим а один ко многим
+
+
 -- Лабораторная работа №4
 
 -- UPDATE В разных таблицах:
@@ -442,3 +449,36 @@ where user_id=7;
 -- 10. История определенного пользователя
 select * from history
 where user_id=1;
+
+
+-- Сложные запросы
+select * from users
+join user_data on user_data.user_id = users.user_id
+join passport on passport.user_id = users.user_id
+where users.name like '%в%'
+
+select * from users
+join child_users on child_users.child_id = users.user_id
+join completed_lessons on completed_lessons.child_id = child_users.child_id
+
+select * from history
+join user_activities on user_activities.activity_id = history.activity_id
+join users on users.user_id = history.user_id
+
+select * from purchases
+join users on users.user_id = purchases.user_id
+join store on store.product_id = purchases.product_id
+where purchases.product_id = 5
+
+select * from logoped_users
+join logoped_created_lessons on logoped_created_lessons.logoped_id = logoped_users.logoped_id
+join completed_lessons on completed_lessons.lesson_id = logoped_created_lessons.lesson_id
+join child_users on child_users.child_id = completed_lessons.child_id
+where child_users.rating > 10
+
+
+-- мода
+-- топ 3 логопеда, к которым записалось больше всего детей
+-- для заданного логопеда по имени вывести среднюю оценку всех его уроков
+-- для каждого логопеда вывести сводную инфу (group concat) о всех его группах:
+-- группа (фамилии детей).

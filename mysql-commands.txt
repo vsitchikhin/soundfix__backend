@@ -87,9 +87,46 @@ drop database my_database;
 -- мода
 -- в покупку может входить множество продуктов
 -- дефолтное значение на старт действия покупки - current_date
--- дата конца подписки всегда больше даты начала
+-- дата конца подписки всегда больше даты начала или null
 -- user_activity к пользователю не многие ко многим а один ко многим
 
+drop table purchases;
+
+create table new_table(
+    id_column integer not null auto_increment, 
+    column_text varchar(255),
+    column_date date,
+    column_date_time datetime,
+    column_float float,
+    column_boolean boolean,
+    primary key (id_column)
+);
+
+create table purchases(
+    purchase_id integer not null auto_increment,
+    user_id integer,
+    action_start datetime default current_timestamp,
+    action_end datetime default null,
+    constraint action_end check (action_end = null or action_end > action_start),
+    primary key (purchase_id),
+    foreign key (user_id) references users(user_id)
+);
+
+create table purchase(
+    id integer not null auto_increment,
+    purchase_id integer,
+    product_id integer,
+    buy_date datetime,
+    primary key (id),
+    foreign key (purchase_id) references purchases(purchase_id),
+    foreign key (product_id) references store(product_id)
+);
+
+drop table history;
+
+alter table user_activities
+add user_id integer,
+add foreign key (user_id) references users(user_id);
 
 -- Лабораторная работа №4
 

@@ -519,3 +519,107 @@ where child_users.rating > 10
 -- для заданного логопеда по имени вывести среднюю оценку всех его уроков
 -- для каждого логопеда вывести сводную инфу (group concat) о всех его группах:
 -- группа (фамилии детей).
+
+select name, surname, patronymic, count(logoped_id) as children_count from child_users
+join users on logoped_id = user_id
+group by logoped_id
+order by count(logoped_id) desc
+limit 3;
+
+
+select name, surname, avg(rate) as "Средний рейтинг" from completed_lessons
+join logoped_created_lessons on logoped_created_lessons.lesson_id = completed_lessons.lesson_id
+join users on logoped_id = user_id
+where name like 'Ирина'
+group by logoped_id
+order by avg(rate) desc;
+
+select logoped_id, enrollment_in_group.`group_id`, group_concat(surname) as "Фамилии детей"
+from enrollment_in_group
+join children_groups on children_groups.group_id = enrollment_in_group.group_id
+join users on users.user_id = enrollment_in_group.child_id
+group by enrollment_in_group.`group_id`;
+
+
+-- Лабораторная работа № 5
+-- Заполнение таблицы данными из csv файла
+load data infile '/var/lib/mysql-files/chat.csv'
+    into table chat
+    fields TERMINATED by ','
+    ENCLOSED BY '"'
+    LINES TERMINATED BY '\n'
+    IGNORE 1 rows;
+
+load data infile '/home/vladimir/Downloads/csvs/users.csv'
+    into table users
+    fields TERMINATED by ','
+    ENCLOSED BY '"'
+    LINES TERMINATED BY '\n'
+    IGNORE 1 rows;
+
+
+-- Обновление данных в таблице
+update *table_name* set 
+    *column_name* = (
+        select *column_name* from *table_name* where *table_name*.*column_name* = *table_name*.*column_name*
+        order by rand() limit 1
+    ),
+
+
+-- Заполнение таблицы данными из существующих таблиц
+insert into *table_name* (*[table_columns]*) values
+    select *column_name* from *table_name* where *table_name*.*column_name* = *table_name*.*column_name*
+    order by rand() limit 1
+
+
+-- Сложные запросы
+-- По логопеду средний рейтинг его уроков
+-- 0.0037
+select name, surname, avg(rate) as "Средний рейтинг" from completed_lessons
+join logoped_created_lessons on logoped_created_lessons.lesson_id = completed_lessons.lesson_id
+join users on logoped_id = user_id
+where name like 'Ирина'
+group by logoped_id
+order by avg(rate) desc;
+
+
+-- Топ 3 ребенка по рейтингу
+-- 0.0024
+select child_id, max(rating) as 'rating'
+from child_users
+inner join users on users.user_id=child_users.child_id
+group by child_id
+order by max(rating) desc
+limit 3;
+
+
+-- Топ 5 логопедов по кол-ву предложений
+-- 0.0043
+select name, surname, patronymic, count(logoped_id) as "Количество предложений" from applications
+join users on logoped_id = user_id
+group by logoped_id
+order by count(logoped_id) desc
+limit 5;
+
+
+-- Кол-во пользователей по возрастам, сами пользователи и их возраста
+-- 0.0088
+select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
+group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
+(year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
+join passport on passport.user_id = users.user_id
+join user_data on user_data.user_id = users.user_id
+group by (year(current_date) - year(birth_date))
+order by (year(current_date) - year(birth_date)) desc;
+
+
+-- Кол-во пользователей старше 40 или младше 20
+-- 0.0071
+select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
+group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
+(year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
+join passport on passport.user_id = users.user_id
+join user_data on user_data.user_id = users.user_id
+where (year(current_date) - year(birth_date)) > 40 or (year(current_date) - year(birth_date)) < 20
+group by (year(current_date) - year(birth_date))
+order by (year(current_date) - year(birth_date)) desc;

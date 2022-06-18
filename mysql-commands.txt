@@ -128,6 +128,9 @@ alter table user_activities
 add user_id integer,
 add foreign key (user_id) references users(user_id);
 
+
+
+
 -- Лабораторная работа №4
 
 -- UPDATE В разных таблицах:
@@ -541,7 +544,10 @@ join users on users.user_id = enrollment_in_group.child_id
 group by enrollment_in_group.`group_id`;
 
 
+
+
 -- Лабораторная работа № 5
+
 -- Заполнение таблицы данными из csv файла
 load data infile '/var/lib/mysql-files/chat.csv'
     into table chat
@@ -585,6 +591,7 @@ order by avg(rate) desc;
 
 -- Топ 3 ребенка по рейтингу
 -- 0.0024
+-- индексы:
 select child_id, max(rating) as 'rating'
 from child_users
 inner join users on users.user_id=child_users.child_id
@@ -595,6 +602,7 @@ limit 3;
 
 -- Топ 5 логопедов по кол-ву предложений
 -- 0.0043
+-- индексы:
 select name, surname, patronymic, count(logoped_id) as "Количество предложений" from applications
 join users on logoped_id = user_id
 group by logoped_id
@@ -604,6 +612,7 @@ limit 5;
 
 -- Кол-во пользователей по возрастам, сами пользователи и их возраста
 -- 0.0088
+-- индексы:
 select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
 group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
 (year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
@@ -615,6 +624,7 @@ order by (year(current_date) - year(birth_date)) desc;
 
 -- Кол-во пользователей старше 40 или младше 20
 -- 0.0071
+-- индексы:
 select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
 group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
 (year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
@@ -623,3 +633,242 @@ join user_data on user_data.user_id = users.user_id
 where (year(current_date) - year(birth_date)) > 40 or (year(current_date) - year(birth_date)) < 20
 group by (year(current_date) - year(birth_date))
 order by (year(current_date) - year(birth_date)) desc;
+
+
+-- Индексы
+
+-- Индексирование возраста пользователей в таблице users:
+-- Выбран B-Tree индекс
+alter table users add index age (birth_date);
+
+-- Индексирование оценок детей
+-- Выбран B-Tree индекс
+alter table child_users add index rate (rate);
+
+-- Индексирование предложений логопедам
+-- Выбран B-Tree индекс
+alter table applications add index application_to (logoped_id);
+
+-- Индексирование средней оценки за урок
+-- Выбран B-Tree индекс
+alter table logoped_created_lessons add index average_rate (rate, logoped_id);
+
+
+-- Индексирование уроков
+-- Выбран B-Tree индекс
+alter table logoped_created_lessons add index logoped_lesson (logoped_id, lesson_id);
+
+-- Индексирование оценок
+-- Выбран B-Tree индекс
+alter table completed_lessons add index rate_lesson (rate, lesson_id);
+
+-- Индексирование типа аккаунта
+-- Выбран B-Tree индекс
+alter table user_data add index account (account_type);
+
+
+-- Запросы с индексами
+-- 0.002
+select name, surname, avg(rate) as "Средний рейтинг" from completed_lessons
+join logoped_created_lessons on logoped_created_lessons.lesson_id = completed_lessons.lesson_id
+join users on logoped_id = user_id
+where name like 'Ирина'
+group by logoped_id
+order by avg(rate) desc;
+
+-- 0.0016
+select child_id, max(rating) as 'rating'
+from child_users
+inner join users on users.user_id=child_users.child_id
+group by child_id
+order by max(rating) desc
+limit 3;
+
+-- 0.003
+select name, surname, patronymic, count(logoped_id) as "Количество предложений" from applications
+join users on logoped_id = user_id
+group by logoped_id
+order by count(logoped_id) desc
+limit 5;
+
+-- 0.0043
+select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
+group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
+(year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
+join passport on passport.user_id = users.user_id
+join user_data on user_data.user_id = users.user_id
+group by (year(current_date) - year(birth_date))
+order by (year(current_date) - year(birth_date)) desc;
+
+-- 0.0038
+select count(users.user_id) as "Кол-во пользователей", group_concat(name) as "Имя", 
+group_concat(surname) as "Фамилия", group_concat(patronymic) as "Отчество",
+(year(current_date) - year(birth_date)) as "Возраст", group_concat(account_type) as "Тип аккаунта" from users
+join passport on passport.user_id = users.user_id
+join user_data on user_data.user_id = users.user_id
+where (year(current_date) - year(birth_date)) > 40 or (year(current_date) - year(birth_date)) < 20
+group by (year(current_date) - year(birth_date))
+order by (year(current_date) - year(birth_date)) desc;
+
+
+-- Процедуры
+-- Запись ребенка в группу
+delimiter $$
+create procedure enroll_child_in_group(in kid_id int, in id_group int, in in_date datetime, in out_date datetime)
+begin
+	insert into enrollment_in_group(child_id, group_id, enter_date, exit_date)
+    values (kid_id, id_group, in_date, out_date);
+end$$
+delimiter ;
+
+
+-- Расчет возраста пользователя
+delimiter $$
+create procedure get_user_age(in curr_date date, in birthday date, out age int)
+begin
+    set age = if ((month(curr_date) - month(birthday) < 0), year(curr_date) - year(birthday) - 1, year(curr_date) - year(birthday));
+    set age = if ((day(curr_date) - day(birthday) < 0) and (month(curr_date) - month(birthday) > 0), age - 1, age);
+end$$
+delimiter ;
+
+
+-- Обновления возраста пользователя
+alter table users
+add user_age integer(3) null;
+
+delimiter $$
+create procedure set_user_age(in id int)
+begin
+    select birth_date into @birthday from users
+    where user_id = id;
+
+    call get_user_age(current_date, @birthday, @age);
+
+    update users
+    set user_age = @age
+    where user_id = id;
+end$$
+delimiter ;
+
+
+-- Обновление возрастов всех пользователей
+delimiter $$
+create procedure update_users_age()
+begin
+    declare i int;
+    select count(*) into i from users;
+    
+    set_age: loop
+        call set_user_age(i);
+        set i = i - 1;
+        if i > 0 then
+            iterate set_age;
+        end if;
+        leave set_age;
+    end loop set_age;
+
+end$$
+delimiter ;
+
+
+-- Получение топ n детей по рейтингу
+delimiter $$
+create procedure get_children_top(in limit_count int, out children_top varchar(255), out children_rating varchar(255))
+begin
+
+    select child_id, max(rating) as 'rating'
+    into children_top, children_rating
+    from child_users
+    inner join users on users.user_id=child_users.child_id
+    group by child_id
+    order by max(rating) desc
+    limit limit_count;
+
+end$$
+delimiter ;
+
+
+-- Обновление рейтинга ребенка
+delimiter $$
+create procedure update_child_rating(in kid_id int)
+begin
+    select sum(rate) as 'Общий рейтинг' into @rating
+    from completed_lessons
+    where child_id = kid_id;
+
+    update child_users
+    set rating = @rating
+    where child_id = kid_id;
+end$$
+delimiter ;
+
+
+-- Обновление рейтинга всех детей
+delimiter $$
+create procedure update_children_rating()
+begin
+
+    declare i int;
+    set @last_updated = 0;
+    select count(*) into i 
+    from user_data 
+    where account_type = 3;
+
+    set_rating: loop
+        select user_id
+        into @last_updated
+        from user_data
+        where account_type = 3 and @last_updated < user_id
+        limit 1;
+
+        call update_child_rating(@last_updated);
+        set i = i - 1;
+        if i > 0 then
+            iterate set_rating;
+        end if;
+        leave set_rating;
+    end loop set_rating;
+
+end$$
+delimiter ;
+
+
+-- Представления
+create view full_users_info as
+select * from users
+inner join user_data using(user_id)
+inner join passport using(user_id);
+
+select * from full_users_info;
+
+
+create view full_lessons_info as
+select * from logoped_users
+inner join logoped_created_lessons using(logoped_id)
+inner join lesson_additional_materials using(lesson_id)
+inner join lesson_materials using(material_id);
+
+select * from full_lessons_info;
+
+
+create view children_groups_info as
+select group_id, group_rating, child_id,
+    enter_date, exit_date, children_groups.logoped_id,
+    next_lesson_date, lesson_id, lesson_content,
+    lesson_theme
+    from children_groups
+inner join enrollment_in_group using(group_id)
+inner join group_remote_lessons using(group_id);
+
+select * from children_groups_info;
+
+-- Триггеры
+delimiter $$
+create trigger update_rating
+after insert
+on completed_lessons
+for each row
+begin
+call update_children_rating();
+end$$
+delimiter ;

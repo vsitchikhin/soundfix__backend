@@ -10,4 +10,4 @@
  
 ![ER Диаграмма](../../../../Pictures/Screenshot%20from%202022-05-13%2022-34-48.png)
 
-![Реляционная схема](../../../../Pictures/Screenshot%20from%202022-05-13%2022-34-48.png) ![](../../../../Pictures/Screenshot%20from%202022-05-13%2022-42-02.png) 
+![Реляционная схема](../../../../Pictures/Screenshot%20from%202022-05-13%2022-34-48.png) ![](../../../../Pictures/Screenshot%20from%202022-05-13%2022-42-02.png)

@@ -773,11 +773,10 @@ delimiter ;
 
 -- Получение топ n детей по рейтингу
 delimiter $$
-create procedure get_children_top(in limit_count int, out children_top varchar(255), out children_rating varchar(255))
+create procedure get_children_top(in limit_count int)
 begin
 
-    select child_id, max(rating) as 'rating'
-    into children_top, children_rating
+    select child_id as 'children', max(rating) as 'rating'
     from child_users
     inner join users on users.user_id=child_users.child_id
     group by child_id
